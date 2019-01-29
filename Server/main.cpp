@@ -3,14 +3,20 @@
 //
 
 #include "main.h"
-#include <stdio.h>
-#include <sys/socket.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <stdio.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include <string>
+#include <algorithm>
+#include <iostream>
 
 typedef struct sockaddr SA;
 typedef struct sockaddr_in SA_IN;

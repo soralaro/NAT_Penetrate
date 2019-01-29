@@ -4,12 +4,20 @@
 
 #include "mian.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include <string>
+#include <algorithm>
+#include <iostream>
 
 #define SER "xxx.xxx.xxx.xxx"
 #define PORT 8888
