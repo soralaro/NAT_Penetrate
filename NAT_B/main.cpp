@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <iostream>
 
-#define SER "xxx.xxx.xxx.xxx"
+#define SER "45.62.126.40"
 #define PORT 8888
 
 typedef struct
@@ -66,8 +66,19 @@ int main(int argc,char **argv)
     server.sin_addr.s_addr=inet_addr(SER);
     server.sin_port=htons(PORT);
 
+    struct sockaddr_in client_addr;
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_addr.s_addr = htons(INADDR_ANY);
+    client_addr.sin_port = htons(20011);    //指定端口
+    //把客户机的socket和客户机的socket地址结构联系起来
+    if( bind(sockfd,(struct sockaddr*)&client_addr,sizeof(client_addr))){
+        printf("Client Bind Port Failed!\n");
+        exit(1);
+    }
+
     connect(sockfd,(SA *)&server,sizeof(SA_IN));
     recv(sockfd,&ip,sizeof(IP),0);
+    printf("%s\t%d OK\n",inet_ntoa(ip.ip),ntohs(ip.port));
     close(sockfd);
 
     sockfd2=socket(AF_INET,SOCK_STREAM,0);
@@ -75,7 +86,7 @@ int main(int argc,char **argv)
     server.sin_port=ip.port;
     while(connect(sockfd2,(SA *)&server,sizeof(SA_IN)) == -1)
         perror("connect");
-
+    printf("connect A suc\n");
     echo_cli(sockfd2);
 
     close(sockfd2);
