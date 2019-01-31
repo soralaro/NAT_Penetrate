@@ -53,7 +53,7 @@ void echo_ser(int sockfd)
 
 int main(int argc,char **argv)
 {
-    int sockfd,sockfd2;
+    int sockfd,sockfd2,sockfd3;
     SA_IN server,addr;
     IP ip;
     socklen_t addrlen=sizeof(SA_IN);
@@ -84,25 +84,57 @@ int main(int argc,char **argv)
     send(sockfd,&s,sizeof(char),0);
     recv(sockfd,&ip,sizeof(IP),0);
     printf("%s\t%d OK\n",inet_ntoa(ip.ip),ntohs(ip.port));
-    sleep(200);
     close(sockfd);
 
     sockfd2=socket(AF_INET,SOCK_STREAM,0);
-    if(sockfd2 == -1)
-        perror("sockfd2");
     if(setsockopt(sockfd2,SOL_SOCKET,SO_REUSEADDR,&flags,sizeof(int)) == -1)
+        perror("setsockopt sockfd");
+    struct timeval timeout = {1, 0};//3s
+    int ret = setsockopt(sockfd2, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+    if (ret < 0) {
+        perror("setsockopt SO_SNDTIMEO");
+        exit(1);
+    }
+    ret = setsockopt(sockfd2, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (ret < 0) {
+        perror("setsockopt SO_RCVTIMEO");
+        exit(1);
+    }
+    if( bind(sockfd2,(struct sockaddr*)&client_addr,sizeof(client_addr))){
+        printf("Client Bind Port Failed!\n");
+        exit(1);
+    }
+    bzero(&server,sizeof(SA_IN));
+    server.sin_family=AF_INET;
+    server.sin_addr=ip.ip;
+    server.sin_port=ip.port;
+    int time=0;
+    printf("connect pre sockfd2\n");
+    while(connect(sockfd2,(SA *)&server,sizeof(SA_IN)) == -1) {
+        perror("connect");
+
+        break;
+    }
+    close(sockfd2);
+    printf("connect time out \n");
+    sockfd3=socket(AF_INET,SOCK_STREAM,0);
+    if(sockfd3 == -1)
+        perror("sockfd3");
+    if(setsockopt(sockfd3,SOL_SOCKET,SO_REUSEADDR,&flags,sizeof(int)) == -1)
         perror("setsockopt sockfd2");
+    bzero(&server,sizeof(SA_IN));
+    server.sin_family=AF_INET;
     server.sin_addr.s_addr=INADDR_ANY;
     server.sin_port=client_addr.sin_port;//ip.port;
-    if(bind(sockfd2,(SA *)&server,sizeof(SA_IN)) == -1)
+    if(bind(sockfd3,(SA *)&server,sizeof(SA_IN)) == -1)
         perror("bind sockfd");
-    if(listen(sockfd2,20) == -1)
+    if(listen(sockfd3,20) == -1)
         perror("listen");
 
-    int newsocket=accept(sockfd2,(SA *)&addr,&addrlen);
+    int newsocket=accept(sockfd3,(SA *)&addr,&addrlen);
     printf("accept new connect %s\t%d OK\n",inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
    // echo_ser(accept(sockfd2,(SA *)&addr,&addrlen));
-
     close(sockfd2);
 
     return 0;

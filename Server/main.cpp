@@ -32,6 +32,7 @@ int main(int argc,char **argv)
     SA_IN server,addr;
     int sockfd;
     IP ip;
+    IP ip2;
     char s;
     socklen_t addrlen=sizeof(SA_IN);
 
@@ -65,13 +66,14 @@ int main(int argc,char **argv)
         recv(newfd[0],&s,sizeof(char),0);
         memcpy(&ip.ip,&addr.sin_addr,sizeof(struct in_addr));
         ip.port=addr.sin_port;
-        printf("%s\t%d OK\n",inet_ntoa(ip.ip),ntohs(ip.port));
+        printf("ip1:%s\t%d OK\n",inet_ntoa(ip.ip),ntohs(ip.port));
 
         newfd[1]=accept(sockfd,(SA *)&addr,&addrlen);
-        printf("%s\t%d OK\n",
-               inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
+        memcpy(&ip2.ip,&addr.sin_addr,sizeof(struct in_addr));
+        ip2.port=addr.sin_port;
+        printf("ip2::%s\t%d OK\n",inet_ntoa(ip2.ip),ntohs(ip2.port));
 
-        send(newfd[0],&ip,sizeof(IP),0);
+        send(newfd[0],&ip2,sizeof(IP),0);
         send(newfd[1],&ip,sizeof(IP),0);
 
         close(newfd[0]);

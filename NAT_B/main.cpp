@@ -58,7 +58,7 @@ int main(int argc,char **argv)
     SA_IN server,addr;
     IP ip;
     socklen_t addrlen=sizeof(SA_IN);
-
+    int flags=1;
     sockfd=socket(AF_INET,SOCK_STREAM,0);
 
     bzero(&server,sizeof(SA_IN));
@@ -69,7 +69,9 @@ int main(int argc,char **argv)
     struct sockaddr_in client_addr;
     client_addr.sin_family = AF_INET;
     client_addr.sin_addr.s_addr = htons(INADDR_ANY);
-    client_addr.sin_port = htons(20011);    //指定端口
+    client_addr.sin_port = htons(20010);    //指定端口
+    if(setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&flags,sizeof(int)) == -1)
+        perror("setsockopt sockfd");
     //把客户机的socket和客户机的socket地址结构联系起来
     if( bind(sockfd,(struct sockaddr*)&client_addr,sizeof(client_addr))){
         printf("Client Bind Port Failed!\n");
@@ -82,10 +84,33 @@ int main(int argc,char **argv)
     close(sockfd);
 
     sockfd2=socket(AF_INET,SOCK_STREAM,0);
+    struct timeval timeout = {1, 0};//3s
+    int ret = setsockopt(sockfd2, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+    if (ret < 0) {
+        perror("setsockopt SO_SNDTIMEO");
+        exit(1);
+    }
+    ret = setsockopt(sockfd2, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (ret < 0) {
+        perror("setsockopt SO_RCVTIMEO");
+        exit(1);
+    }
+    if(setsockopt(sockfd2,SOL_SOCKET,SO_REUSEADDR,&flags,sizeof(int)) == -1)
+        perror("setsockopt sockfd");
+    if( bind(sockfd2,(struct sockaddr*)&client_addr,sizeof(client_addr))){
+        printf("Client Bind Port Failed!\n");
+        exit(1);
+    }
     server.sin_addr=ip.ip;
     server.sin_port=ip.port;
-    while(connect(sockfd2,(SA *)&server,sizeof(SA_IN)) == -1)
+    sleep(2);
+    while(connect(sockfd2,(SA *)&server,sizeof(SA_IN)) == -1) {
         perror("connect");
+        sleep(1);
+    }
+    char *s="a";
+    send(sockfd2,&s,sizeof(char),0);
     printf("connect A suc\n");
     echo_cli(sockfd2);
 
